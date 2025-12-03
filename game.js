@@ -23,9 +23,9 @@
 
   const W = CANVAS.width, H = CANVAS.height;
   const GROUND_Y = H - 120;
-  const GRAVITY = 0.75;
+  const GRAVITY = 0.86;
   const JUMP_VEL = -12.5;
-  const SPEED = 2.2;     // camera speed
+  const SPEED = 0.5;     // camera speed
   const BLOCK_SIZE = 35;
   const SHAKE_DECAY = 0.85;
 
