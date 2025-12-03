@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GD-Style: Roblox Changes Edition</title>
+<style>
+  :root {
+    --bg0: #0f1226;
+    --bg1: #171a35;
+    --accent: #4bd1ff;
+    --accent2: #7efcff;
+    --warning: #ff4b6e;
+    --ok: #78ffb7;
+    --text: #eaf3ff;
+    --shadow: rgba(0,0,0,0.5);
+    --glow: 0 0 16px rgba(75,209,255,0.6), 0 0 32px rgba(126,252,255,0.4);
+  }
+  html, body {
+    margin: 0; padding: 0; background: linear-gradient(180deg, var(--bg0), var(--bg1));
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    color: var(--text);
+    height: 100%;
+    overflow: hidden;
+  }
+  #ui {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  #menu, #hud, #overlay {
+    position: absolute; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: auto;
+  }
+  #menu {
+    top: 0; bottom: 0; flex-direction: column; gap: 24px;
+  }
+  .title {
+    font-weight: 800; font-size: 32px; letter-spacing: 0.5px; text-shadow: var(--glow);
+  }
+  .subtitle {
+    opacity: 0.85; font-size: 14px;
+  }
+  .level-row {
+    display: flex; align-items: center; gap: 18px;
+  }
+  .arrow {
+    width: 44px; height: 44px; border-radius: 10px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+    display: grid; place-items: center; cursor: pointer; user-select: none;
+    box-shadow: 0 6px 18px var(--shadow);
+    transition: transform 120ms ease, background 120ms ease;
+  }
+  .arrow:hover { transform: translateY(-2px); background: rgba(255,255,255,0.10); }
+  .level-card {
+    width: 260px; min-height: 120px; border-radius: 16px;
+    background: linear-gradient(180deg, rgba(75,209,255,0.18), rgba(75,209,255,0.08));
+    border: 1px solid rgba(126,252,255,0.25);
+    box-shadow: var(--glow);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    padding: 16px; text-align: center;
+  }
+  .level-name { font-weight: 700; font-size: 18px; }
+  .play-btn {
+    margin-top: 8px; pointer-events: auto;
+    background: var(--accent); color: #002434; border: 0; border-radius: 12px; padding: 10px 16px;
+    font-weight: 700; cursor: pointer; box-shadow: 0 10px 24px rgba(75,209,255,0.35);
+    transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+  }
+  .play-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 32px rgba(75,209,255,0.45); }
+  #hud {
+    top: 12px; height: 36px; justify-content: space-between; padding: 0 16px; opacity: 0;
+    transition: opacity 180ms ease;
+  }
+  .pill {
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 999px; padding: 8px 14px; display: inline-flex; gap: 10px; align-items: center;
+    box-shadow: 0 6px 12px var(--shadow);
+  }
+  .btn {
+    pointer-events: auto; cursor: pointer; user-select: none;
+    background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+    padding: 8px 12px; transition: transform 120ms ease, background 120ms ease;
+  }
+  .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.12); }
+  #overlay {
+    bottom: 18px; height: auto; pointer-events: none; flex-direction: column; gap: 10px; opacity: 0; transition: opacity 220ms ease;
+  }
+  .info-card {
+    max-width: 70vw; background: rgba(20,24,48,0.8); border: 1px solid rgba(126,252,255,0.25);
+    backdrop-filter: blur(6px); border-radius: 16px; padding: 12px 16px; box-shadow: var(--glow);
+    font-size: 14px; line-height: 1.3;
+  }
+  canvas { display: block; width: 100vw; height: 100vh; }
+  /* Face accents */
+  .tiny { font-size: 12px; opacity: 0.8; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="ui">
+  <div id="menu">
+    <div class="title">Roblox Changes Dash</div>
+    <div class="subtitle">Arrow-select a level. Play to the beat. Avoid spikes. The info fades as you progress.</div>
+    <div class="level-row">
+      <div class="arrow" id="left">&larr;</div>
+      <div class="level-card">
+        <div class="level-name" id="levelName">Level 1 — 2006</div>
+        <div class="tiny">Music: level1.mp3 • Difficulty: Easy</div>
+        <button class="play-btn" id="play">Play</button>
+      </div>
+      <div class="arrow" id="right">&rarr;</div>
+    </div>
+    <div class="pill">
+      <span>Controls: Space / Up = Jump • R = Restart • Esc = Menu</span>
+    </div>
+  </div>
+
+  <div id="hud">
+    <div class="pill"><strong>Level:</strong> <span id="hudLevel">1</span> • <strong>Progress:</strong> <span id="hudProg">0%</span></div>
+    <div class="pill"><strong>Status:</strong> <span id="hudStatus">Ready</span></div>
+    <div class="btn" id="menuBtn">Menu</div>
+  </div>
+
+  <div id="overlay"></div>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // Basic game state
+  const GRAVITY = 0.0016; // px/ms^2
+  const JUMP_V = -0.78;   // px/ms
+  const SPEED = 0.28;     // px/ms base
+  const GROUND_H = 100;
+  const TILE = 48;
+
+  // Beat visualizer via WebAudio
+  let audioCtx, analyser, sourceNode;
+  let beatEnergy = 0; // 0..1
+  let music, currentLevel = 1;
+  let running = false, dead = false, win = false;
+  let time = 0;
+
+  // UI elements
+  const menuEl = document.getElementById('menu');
+  const overlayEl = document.getElementById('overlay');
+  const hudEl = document.getElementById('hud');
+  const hudLevelEl = document.getElementById('hudLevel');
+  const hudProgEl = document.getElementById('hudProg');
+  const hudStatusEl = document.getElementById('hudStatus');
+  const levelNameEl = document.getElementById('levelName');
+
+  // Levels meta and info text
+  const levels = [
+    { id:1, name:'Level 1 — 2006', mp3:'level1.mp3', info: '2006: Early Roblox—basic building, user-generated places, simple avatars, and first community features.' },
+    { id:2, name:'Level 2 — 2008', mp3:'level2.mp3', info: '2008: Growth phase—Badges, improved physics, more customization, and stronger social/game discovery tools.' },
+    { id:3, name:'Level 3 — 2016', mp3:'level3.mp3', info: '2016: Big polish—R15 avatar, improved rendering, DevEx expansion, and more professional experiences.' },
+    { id:4, name:'Level 4 — 2018', mp3:'level4.mp3', info: '2018: Performance & scale—better mobile support, analytics, premium dev features, and event-focused content.' },
+    { id:5, name:'Level 5 — 2025', mp3:'level5.mp3', info: '2025: Ecosystem maturity—advanced creation tools, safety, immersion upgrades, and expanded creator economy.' },
+  ];
+
+  function setLevelName(n) {
+    const meta = levels.find(l => l.id === n);
+    levelNameEl.textContent = meta ? meta.name : `Level ${n}`;
+  }
+
+  // Menu arrows and play
+  const left = document.getElementById('left');
+  const right = document.getElementById('right');
+  const playBtn = document.getElementById('play');
+  const menuBtn = document.getElementById('menuBtn');
+
+  left.onclick = () => {
+    currentLevel = ((currentLevel + levels.length - 2) % levels.length) + 1;
+    setLevelName(currentLevel);
+  };
+  right.onclick = () => {
+    currentLevel = (currentLevel % levels.length) + 1;
+    setLevelName(currentLevel);
+  };
+  playBtn.onclick = () => startLevel(currentLevel);
+  menuBtn.onclick = () => backToMenu();
+
+  // Player
+  const player = {
+    x: 140, y: 0,
+    w: 36, h: 36,
+    vy: 0,
+    grounded: false,
+    spin: 0,
+    blink: 0
+  };
+
+  // Camera and world
+  const camera = { x: 0, shake: 0, shakeT: 0 };
+  const particles = [];
+
+  // Simple parallax background layers
+  const bgLayers = [
+    { speed: 0.12, color: '#141736' },
+    { speed: 0.08, color: '#0e132e' },
+    { speed: 0.04, color: '#0b0f24' }
+  ];
+
+  // Spike map builder — each level has a set layout
+  function makeMap(levelId) {
+    // Layout blocks: array of objects {t:'spike'|'block', x,y,w,h}
+    // Keep it easy: sparse spikes, obvious gaps
+    const items = [];
+    let x = 0;
+    const length = 220; // tiles length
+
+    // Ground blocks
+    items.push({ t:'ground', x:0, y:0, w:length*TILE, h:GROUND_H });
+
+    function addSpike(tileX) {
+      items.push({ t:'spike', x: tileX*TILE, y: GROUND_H, w: TILE, h: TILE });
+    }
+    function addPlatform(tileX, tileW, height) {
+      items.push({ t:'platform', x: tileX*TILE, y: GROUND_H - height, w: tileW*TILE, h: 12 });
+    }
+
+    // Level themes: gradually introduce spikes and platforms
+    const easySpikes = [10, 18, 26, 34, 42, 50, 58, 72, 88, 104, 118, 132, 148, 164, 180, 196, 208];
+    const mediumSpikes = [14, 22, 30, 38, 46, 54, 68, 82, 98, 112, 126, 140, 156, 172, 188, 204];
+    const platforms = [
+      { tx: 20, w: 3, h: 70 },
+      { tx: 60, w: 4, h: 90 },
+      { tx: 100, w: 5, h: 80 },
+      { tx: 150, w: 4, h: 70 },
+      { tx: 190, w: 3, h: 60 },
+    ];
+
+    const setSpikes = levelId <= 2 ? easySpikes : mediumSpikes;
+    setSpikes.forEach(s => addSpike(s));
+    platforms.forEach(p => addPlatform(p.tx, p.w, p.h));
+
+    // Goal flag
+    items.push({ t:'goal', x: (length-4)*TILE, y: GROUND_H - 120, w: 40, h: 120 });
+
+    return items;
+  }
+
+  let map = makeMap(currentLevel);
+
+  // Audio
+  async function setupAudio(mp3) {
+    if (music) {
+      try { music.pause(); } catch(e){}
+    }
+    music = new Audio(mp3);
+    music.loop = false;
+    music.preload = 'auto';
+    music.crossOrigin = 'anonymous';
+
+    // Web Audio analyser
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    // Connect
+    if (sourceNode) { try { sourceNode.disconnect(); } catch(e){} }
+    sourceNode = audioCtx.createMediaElementSource(music);
+    sourceNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    // Beat update
+    function updateBeat() {
+      analyser.getByteFrequencyData(dataArray);
+      // Focus on low-mid bands for a “beat” feel
+      let sum = 0, count = 0;
+      for (let i = 4; i < 32; i++) { sum += dataArray[i]; count++; }
+      const avg = sum / Math.max(1, count);
+      // Smooth and clamp
+      beatEnergy = Math.max(0, Math.min(1, (avg / 180)));
+    }
+    return { updateBeat, dataArray };
+  }
+
+  // Info overlay control
+  let infoAlpha = 1; // fades as progress increases
+
+  function showInfo(text) {
+    overlayEl.innerHTML = '';
+    const div = document.createElement('div');
+    div.className = 'info-card';
+    div.textContent = text;
+    overlayEl.appendChild(div);
+    overlayEl.style.opacity = '1';
+    infoAlpha = 1;
+  }
+
+  function fadeInfo(progress01) {
+    // More you go, more it disappears
+    infoAlpha = Math.max(0, 1 - progress01 * 1.2);
+    overlayEl.style.opacity = String(infoAlpha);
+  }
+
+  // Start and menu transitions
+  async function startLevel(n) {
+    running = true; dead = false; win = false;
+    time = 0; player.x = 140; player.y = 0; player.vy = 0; player.grounded = false; player.spin = 0; player.blink = 0;
+    camera.x = 0; camera.shake = 0; camera.shakeT = 0;
+    particles.length = 0;
+    map = makeMap(n);
+    hudLevelEl.textContent = String(n);
+    hudStatusEl.textContent = 'Playing';
+    menuEl.style.display = 'none';
+    hudEl.style.opacity = '1';
+
+    const meta = levels.find(l => l.id === n);
+    showInfo(meta ? meta.info : '');
+
+    const audioBits = await setupAudio(meta.mp3);
+    music.currentTime = 0;
+    try { await music.play(); } catch(e) { /* browsers may require interaction */ }
+
+    // attach beat updater
+    beatUpdater = audioBits.updateBeat;
+  }
+
+  function backToMenu() {
+    running = false;
+    try { music.pause(); } catch(e){}
+    menuEl.style.display = 'flex';
+    hudEl.style.opacity = '0';
+    overlayEl.style.opacity = '0';
+  }
+
+  // Input
+  const keys = { space:false, up:false };
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+      keys.space = true; keys.up = true;
+      if (running && !dead && !win && player.grounded) {
+        player.vy = JUMP_V;
+        player.grounded = false;
+        spawnJumpParticles();
+      }
+      e.preventDefault();
+    }
+    if (e.code === 'KeyR') restart();
+    if (e.code === 'Escape') backToMenu();
+    if (e.code === 'ArrowLeft') left.onclick();
+    if (e.code === 'ArrowRight') right.onclick();
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space' || e.code === 'ArrowUp') { keys.space = false; keys.up = false; }
+  });
+
+  function restart() {
+    if (!running) return;
+    startLevel(currentLevel);
+  }
+
+  // Particles
+  function spawnJumpParticles() {
+    for (let i = 0; i < 10; i++) {
+      particles.push({
+        x: player.x + player.w/2, y: player.y + player.h,
+        vx: (Math.random()*0.2 - 0.1), vy: -(Math.random()*0.25 + 0.05),
+        life: Math.random()*600 + 300, color: 'rgba(126,252,255,0.9)'
+      });
+    }
+  }
+  function spawnDeathParticles(px, py) {
+    for (let i = 0; i < 26; i++) {
+      particles.push({
+        x: px, y: py,
+        vx: (Math.random()*0.6 - 0.3), vy: (Math.random()*0.6 - 0.3),
+        life: Math.random()*900 + 400, color: 'rgba(255,75,110,0.9)'
+      });
+    }
+  }
+  function spawnBeatParticles() {
+    const magnitude = beatEnergy;
+    if (magnitude < 0.2) return;
+    for (let i = 0; i < Math.floor(3 + magnitude*6); i++) {
+      particles.push({
+        x: camera.x + canvas.width * Math.random(), y: 80 + Math.random()*120,
+        vx: (Math.random()*0.3 - 0.15), vy: (Math.random()*0.1 - 0.05),
+        life: 500 + Math.random()*600, color: `rgba(75,209,255,${0.25 + 0.35*magnitude})`
+      });
+    }
+  }
+
+  // Collision helpers
+  function rectsIntersect(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  // Rendering helpers
+  function drawBackground(dt) {
+    // Parallax stripes
+    bgLayers.forEach((layer, idx) => {
+      const offset = -camera.x * layer.speed;
+      ctx.fillStyle = layer.color;
+      const stripeH = canvas.height / 6;
+      for (let i = 0; i < 6; i++) {
+        const y = i*stripeH + Math.sin((time*0.0006 + i)*1.7) * 6;
+        ctx.globalAlpha = 0.6 - i*0.08;
+        ctx.fillRect(offset % canvas.width - canvas.width, y, canvas.width*2, stripeH);
+      }
+      ctx.globalAlpha = 1;
+    });
+
+    // Beat glow at top
+    const glow = Math.floor(beatEnergy * 60);
+    const grad = ctx.createLinearGradient(0, 0, 0, 140);
+    grad.addColorStop(0, `rgba(75,209,255,${0.28 + beatEnergy*0.4})`);
+    grad.addColorStop(1, 'rgba(75,209,255,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, 140);
+  }
+
+  function drawGround() {
+    ctx.save();
+    ctx.translate(-camera.x, canvas.height - GROUND_H);
+    // Ground line
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    ctx.fillRect(0, 0, 999999, 2);
+
+    // Platforms
+    map.forEach(item => {
+      if (item.t === 'platform') {
+        ctx.fillStyle = 'rgba(126,252,255,0.35)';
+        ctx.fillRect(item.x, -item.h, item.w, item.h);
+        // underline effect
+        ctx.fillStyle = 'rgba(126,252,255,0.65)';
+        ctx.fillRect(item.x, -2, item.w, 2);
+      }
+    });
+
+    // Spikes
+    map.forEach(item => {
+      if (item.t === 'spike') {
+        const x = item.x, y = 0;
+        const w = TILE, h = TILE;
+        ctx.fillStyle = 'rgba(255,75,110,0.9)';
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w/2, y - h);
+        ctx.lineTo(x + w, y);
+        ctx.closePath();
+        ctx.fill();
+        // glow
+        ctx.strokeStyle = 'rgba(255,75,110,0.5)';
+        ctx.stroke();
+      }
+    });
+
+    // Goal flag
+    map.forEach(item => {
+      if (item.t === 'goal') {
+        ctx.save();
+        ctx.translate(item.x, -item.h);
+        ctx.fillStyle = 'rgba(120,255,183,0.8)';
+        ctx.fillRect(0, 0, 8, item.h);
+        ctx.fillStyle = 'rgba(120,255,183,0.9)';
+        ctx.beginPath();
+        ctx.moveTo(8, 0);
+        ctx.lineTo(8+40, 16);
+        ctx.lineTo(8, 32);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    });
+
+    ctx.restore();
+  }
+
+  function drawPlayer() {
+    ctx.save();
+    const shakeX = camera.shake ? (Math.sin(time*0.07)*camera.shake) : 0;
+    const shakeY = camera.shake ? (Math.cos(time*0.09)*camera.shake*0.6) : 0;
+    const px = player.x - camera.x + shakeX;
+    const py = canvas.height - GROUND_H - player.y + shakeY;
+
+    // Body with glow
+    ctx.fillStyle = '#2bb7ff';
+    ctx.shadowColor = 'rgba(75,209,255,0.6)';
+    ctx.shadowBlur = 20 + beatEnergy*26;
+    roundRect(ctx, px, py, player.w, player.h, 6, true, false);
+
+    // Face: eyes blink, mouth bounce on beat
+    const eyeBlink = (Math.sin(player.blink) > 0.98) ? 0.3 : 1;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#072e4b';
+    // eyes
+    roundRect(ctx, px + 9, py + 10, 6, 6*eyeBlink, 2, true, false);
+    roundRect(ctx, px + player.w - 15, py + 10, 6, 6*eyeBlink, 2, true, false);
+    // mouth
+    const mBounce = beatEnergy * 4;
+    roundRect(ctx, px + 10, py + 22, player.w - 20, 8 + mBounce, 4, true, false);
+
+    ctx.restore();
+  }
+
+  function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+  function update(dt) {
+    if (!running) return;
+
+    time += dt;
+    player.blink += dt*0.002;
+
+    // Beat update and beat particles
+    if (beatUpdater) { beatUpdater(); spawnBeatParticles(); }
+
+    // Move camera forward
+    const speed = SPEED * (1 + beatEnergy*0.15);
+    camera.x += speed * dt;
+
+    // Progress and info fade
+    const goal = map.find(m => m.t === 'goal');
+    const progress01 = Math.min(1, (camera.x - 100) / Math.max(1, goal.x - 100));
+    hudProgEl.textContent = `${Math.floor(progress01*100)}%`;
+    fadeInfo(progress01);
+
+    // Player physics
+    player.vy += GRAVITY * dt;
+    player.y += player.vy * dt;
+
+    // Ground check
+    if (player.y >= 0) {
+      player.y = 0;
+      player.vy = 0;
+      player.grounded = true;
+    } else {
+      player.grounded = false;
+    }
+
+    // Collisions with platforms (simple floor)
+    map.forEach(item => {
+      if (item.t === 'platform') {
+        const rect = { x:item.x, y: item.h, w:item.w, h:item.h }; // platform from ground upward
+        const pr = { x: player.x, y: player.y, w: player.w, h: player.h };
+        // translate into same frame: using ground as zero, player.y is above ground
+        const pxWorld = player.x;
+        const pyWorld = player.y;
+        if (pxWorld + player.w > item.x && pxWorld < item.x + item.w) {
+          const topY = item.h;
+          if (pyWorld >= topY - 12 && pyWorld <= topY + 20 && player.vy > 0) {
+            player.y = topY - 12;
+            player.vy = 0;
+            player.grounded = true;
+          }
+        }
+      }
+    });
+
+    // Spike collision
+    const pWorld = { x: player.x, y: player.y, w: player.w, h: player.h };
+    for (const item of map) {
+      if (item.t === 'spike') {
+        const tri = { x:item.x, y:0, w:TILE, h:TILE };
+        // Approximate triangle as a rectangle near base + peak check
+        const spikeRect = { x: tri.x + 8, y: tri.y - tri.h + 4, w: tri.w - 16, h: tri.h - 4 };
+        if (pWorld.x < spikeRect.x + spikeRect.w && pWorld.x + pWorld.w > spikeRect.x &&
+            pWorld.y < spikeRect.y + spikeRect.h && pWorld.y + pWorld.h > spikeRect.y) {
+          die(item.x + tri.w/2, tri.y - tri.h/2);
+          break;
+        }
+      }
+    }
+
+    // Goal check
+    if (!dead && !win && pWorld.x > goal.x - 20) {
+      win = true;
+      hudStatusEl.textContent = 'Goal!';
+      setTimeout(() => {
+        // Advance to next level or back to menu if finished
+        currentLevel = (currentLevel % levels.length) + 1;
+        setLevelName(currentLevel);
+        backToMenu();
+      }, 1200);
+    }
+
+    // Keep player moving with camera
+    player.x = camera.x + 140;
+
+    // Camera shake decay
+    if (camera.shakeT > 0) {
+      camera.shakeT -= dt;
+      if (camera.shakeT <= 0) camera.shake = 0;
+    }
+
+    // Particles update
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx * dt * 0.9;
+      p.y += p.vy * dt * 0.9;
+      p.life -= dt;
+      if (p.life <= 0) particles.splice(i,1);
+    }
+  }
+
+  function die(px, py) {
+    if (dead) return;
+    dead = true;
+    hudStatusEl.textContent = 'You hit a spike!';
+    camera.shake = 10; camera.shakeT = 700;
+    spawnDeathParticles(px - camera.x, canvas.height - GROUND_H - py);
+    try { music.pause(); } catch(e){}
+    setTimeout(() => { restart(); }, 900);
+  }
+
+  // Beat updater stub assigned after audio setup
+  let beatUpdater = null;
+
+  // Draw UI particles and foreground
+  function drawParticles() {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    particles.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.4, 0, Math.PI*2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
+  // Main loop
+  let last = performance.now();
+  function loop(now) {
+    const dt = now - last; last = now;
+    // Clear
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    drawBackground(dt);
+    drawGround();
+    if (running) drawPlayer();
+    drawParticles();
+    update(dt);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // Initial state
+  setLevelName(currentLevel);
+
+})();
+</script>
+</body>
+</html>
