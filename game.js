@@ -25,8 +25,8 @@
   const GROUND_Y = H - 120;
   const GRAVITY = 0.75;
   const JUMP_VEL = -12.5;
-  const SPEED = 5.2;     // camera speed
-  const BLOCK_SIZE = 40;
+  const SPEED = 2.2;     // camera speed
+  const BLOCK_SIZE = 35;
   const SHAKE_DECAY = 0.85;
 
   let currentLevelIndex = 0;
