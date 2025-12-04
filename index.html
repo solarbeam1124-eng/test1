@@ -1,45 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini Dash</title>
-  <link rel="preload" href="level1.mp3" as="audio">
-  <link rel="preload" href="level2.mp3" as="audio">
-  <link rel="preload" href="level3.mp3" as="audio">
-  <link rel="preload" href="level4.mp3" as="audio">
-  <link rel="preload" href="level5.mp3" as="audio">
+  <meta charset="utf-8" />
+  <title>GeoDash — Roblox Timeline Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
-    <div id="home" class="screen">
-      <div class="logo">Mini Dash</div>
-      <div class="carousel">
-        <button class="arrow left" aria-label="Previous">&#9664;</button>
-        <div class="card">
-          <div class="level-title">Level <span id="levelNumber">1</span></div>
-          <div class="level-info">Press Enter or Play to start</div>
-          <button id="playBtn" class="btn">Play</button>
-        </div>
-        <button class="arrow right" aria-label="Next">&#9654;</button>
+  <div id="ui">
+    <div id="home">
+      <div class="logo">GeoDash</div>
+      <div class="subtitle">Roblox Timeline Edition</div>
+      <div class="level-select">
+        <button id="prevLevel" aria-label="Previous level">◀</button>
+        <div id="levelName">Level 1 — 2006</div>
+        <button id="nextLevel" aria-label="Next level">▶</button>
       </div>
-      <div class="help">Jump: Space / W / Up — Back: Esc — Restart: R</div>
+      <button id="playBtn" class="primary">Play</button>
+      <div class="hint">Use Space or Up to jump. Avoid spikes. Press R to restart.</div>
     </div>
 
-    <canvas id="game" width="960" height="540" class="screen"></canvas>
-
-    <div id="overlay">
-      <div id="infoText"></div>
+    <div id="hud" class="hidden">
+      <div id="hudLevel"></div>
+      <div id="hudStatus"></div>
+      <button id="homeBtn" class="secondary">Home</button>
     </div>
 
-    <div id="topBar">
-      <div class="pill" id="status">Ready</div>
-      <div class="pill" id="levelName">Level 1</div>
-      <div class="pill" id="attempts">Attempts: 0</div>
-      <div class="pill" id="progress">0%</div>
-    </div>
+    <div id="overlayInfo" class="overlay hidden"></div>
   </div>
+
+  <canvas id="game" width="960" height="540" aria-label="Game canvas"></canvas>
 
   <script src="game.js"></script>
 </body>
