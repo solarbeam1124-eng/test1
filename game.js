@@ -1,11 +1,3 @@
-/* Mini Dash — Geometry Dash–style game
-   - Home screen with arrows and levels 1–5
-   - Blue block character with face
-   - Set maps per level with spikes
-   - Music per level: levelN.mp3
-   - Info text shows Roblox changes by year; rotates each death
-   - Effects: parallax BG, pulse to beat approximation, particles, screen shake
-*/
 
 (() => {
   const CANVAS = document.getElementById('game');
